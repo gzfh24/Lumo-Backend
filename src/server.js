@@ -13,15 +13,31 @@ app.get('/', (req, res) => {
 });
 
 // 404 handler
-app.get('*', (req, res) => {
+app.use('*', (req, res) => {
     return res.status(404).send("Not Found");
 })
 
 // global error handler
 app.use((err, req, res, next) => {
-    console.log(err)
-    return res.status(500).send({error: err});
-})
+
+    const defaultErr = {
+      log: "Express error handler caught unknown middleware error.",
+      status: 500,
+      message: { err: "An unexpected error occurred." },
+      origin: "Unknown",
+      type: "Unknown Error"
+    };
+    
+    const errorObj = {...defaultErr, ...err};
+    console.error(`Error [${errorObj.type}] at ${errorObj.origin}: ${errorObj.message.err || err.message}`);
+  
+    return res.status(errorObj.status).json({
+      error: errorObj.message.err || "An error occured",
+      location: errorObj.origin,
+      type: errorObj.type
+    });
+    
+  });
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
